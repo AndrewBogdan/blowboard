@@ -4,6 +4,7 @@
 
 import logging
 
+import cv2
 import librosa
 import numpy as np
 import pyaudio
@@ -20,6 +21,10 @@ def listen_pyaudio(timeout=np.inf):
     logging.info(f"Opening PyAudio stream on device index "
                  f"{cfg['portaudio_device_index']}")
     stream = mic.get_pyaudio_stream(audio)
+
+    # Watch too
+    face_cascade = cv2.CascadeClassifier('classifier.xml')
+    cap = cv2.VideoCapture(0)
 
     # Listen to the stream forever
     last_time = 0.0
@@ -41,6 +46,8 @@ def listen_pyaudio(timeout=np.inf):
 
             spectro_df, _, _ = classifier.classify_spectro_df(spectro_df)
 
+            watch(cap, face_cascade)
+
     finally:
         # Close stream
         stream.stop_stream()
@@ -48,6 +55,8 @@ def listen_pyaudio(timeout=np.inf):
 
         # Close PortAudio interface
         audio.terminate()
+
+        cap.release()
 
 
 def poll_one_block(stream, time):
@@ -118,3 +127,18 @@ def poll_one_block(stream, time):
     }
 
     return output
+
+
+def watch(cap, face_cascade):
+    _, img = cap.read()
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # Detect faces
+    faces = face_cascade.detectMultiScale(gray, 1.3, 4)
+    # Draw rectangle around the faces
+    for (x, y, w, h) in faces:
+        cv2.rectangle(img, (x, y), (x+w, y+h), (227, 60, 199), 2)
+    # Display the output
+    print(f'{len(faces)} faces')
+    cv2.imshow('img', img)
+    k = cv2.waitKey(30) & 0xff

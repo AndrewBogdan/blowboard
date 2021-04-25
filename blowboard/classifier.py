@@ -34,9 +34,9 @@ def classify_spectro_df(spectro_df: pd.DataFrame):
     for start, end in active_regions:
         print(f'whistle detected: ({start}, {end})')
         keyboard = pynput.keyboard.Controller()
-        keyboard.press('L')
+        keyboard.press(pynput.keyboard.Key.caps_lock)
         time.sleep(0.2)
-        keyboard.release('L')
+        keyboard.release(pynput.keyboard.Key.caps_lock)
 
 
     # Drop anything which has been classified
